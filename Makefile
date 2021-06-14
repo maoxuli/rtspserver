@@ -5,7 +5,7 @@
 ################################################################################
 
 APP:=rtspd
-APP_INSTALL_DIR?=../bin
+APP_INSTALL_DIR?=/usr/local/bin
 
 SRCS:= $(wildcard *.c)
 INCS:= $(wildcard *.h)
