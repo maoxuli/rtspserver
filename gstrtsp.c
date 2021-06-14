@@ -6,6 +6,9 @@
 #define DEFAULT_RTSP_PORT 8554
 #define DEFAULT_ENCODER "H264"
 
+static guint cintr = FALSE;
+static gboolean quit = FALSE;
+static GMainLoop *main_loop = NULL;
 static gchar *cfg_file = NULL;
 
 static GOptionEntry entries[] = {
@@ -35,9 +38,51 @@ static void load_settings(struct Settings *settings, const gchar *cfg_file)
     } 
 }
 
+// Loop function to check the status of interrupts.
+// It comes out of loop if application got interrupted.
+static gboolean check_for_interrupt (gpointer data)
+{
+  if (quit) {
+    return FALSE;
+  }
+
+  if (cintr) {
+    cintr = FALSE;
+
+    quit = TRUE;
+    g_main_loop_quit (main_loop);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+// Function to handle program interrupt signal.
+// It installs default handler after handling the interrupt.
+static void _intr_handler (int signum)
+{
+  struct sigaction action;
+
+  memset (&action, 0, sizeof (action));
+  action.sa_handler = SIG_DFL;
+
+  sigaction (SIGINT, &action, NULL);
+
+  cintr = TRUE;
+}
+
+// Function to install custom handler for program interrupt signal.
+static void _intr_setup (void)
+{
+  struct sigaction action;
+
+  memset (&action, 0, sizeof (action));
+  action.sa_handler = _intr_handler;
+
+  sigaction (SIGINT, &action, NULL);
+}
+
 int main (int argc, char *argv[])
 {
-    GMainLoop *loop;
     GstRTSPServer *server;
     GstRTSPMountPoints *mounts;
     GstRTSPMediaFactory *factory;
@@ -75,7 +120,7 @@ int main (int argc, char *argv[])
 
     sprintf (rtsp_port_str, "%d", settings.rtsp_port);
  
-    loop = g_main_loop_new (NULL, FALSE);
+    main_loop = g_main_loop_new (NULL, FALSE);
 
     /* create a server instance */
     server = gst_rtsp_server_new ();
@@ -102,9 +147,12 @@ int main (int argc, char *argv[])
     /* attach the server to the default maincontext */
     gst_rtsp_server_attach (server, NULL);
 
+    _intr_setup ();
+    g_timeout_add (400, check_for_interrupt, NULL);
+
     /* start serving */
     g_print ("stream ready at rtsp://localhost:%d/live\n", settings.rtsp_port);
-    g_main_loop_run (loop);
+    g_main_loop_run (main_loop);
 
     return 0;
 }
