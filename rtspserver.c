@@ -6,16 +6,20 @@
 
 #define DEFAULT_UDP_PORT 5004
 #define DEFAULT_RTSP_PORT 8554
+#define DEFAULT_MOUNT_POINT "live"
 #define DEFAULT_ENCODER "H264"
 
 static guint cintr = FALSE;
 static gboolean quit = FALSE;
 static GMainLoop *main_loop = NULL;
 static gchar *cfg_file = NULL;
+static int log_level = 0; 
 
 static GOptionEntry entries[] = {
   {"cfg-file", 'c', 0, G_OPTION_ARG_FILENAME, &cfg_file,
       "Set the config file", NULL},
+  {"log-level", 'l', 0, G_OPTION_ARG_INT, &log_level,
+      "Set the log level", NULL},
   {NULL}
 };
 
@@ -23,6 +27,7 @@ struct Settings
 {
     guint udp_port; 
     guint rtsp_port;
+    gchar *mount_point; 
     guint64 udp_buffer_size; 
     gchar *encoder_name; 
 }; 
@@ -61,6 +66,8 @@ static void load_settings(struct Settings *settings, const gchar *cfg_file)
                 settings->udp_port = json_object_get_int_member (object, "udp_port");
               if (json_object_has_member(object, "rtsp_port"))
                 settings->rtsp_port = json_object_get_int_member (object, "rtsp_port");
+              if (json_object_has_member(object, "mount_point"))
+                settings->mount_point = (char*) json_object_get_string_member (object, "mount_point");
               if (json_object_has_member(object, "udp_buffer_size"))
                 settings->udp_buffer_size = json_object_get_int_member (object, "udp_buffer_size");
               if (json_object_has_member(object, "encoder_name"))
@@ -136,6 +143,8 @@ int main (int argc, char *argv[])
     }
     g_option_context_free (optctx);
 
+    g_print("log level: %d\n", log_level); 
+
     struct Settings settings; 
     memset(&settings, sizeof(settings), 0); 
     load_settings(&settings, cfg_file); 
@@ -172,8 +181,8 @@ int main (int argc, char *argv[])
     gst_rtsp_media_factory_set_launch (factory, udpsrc_pipeline);
     gst_rtsp_media_factory_set_shared (factory, TRUE);
 
-    /* attach the test factory to the /test url */
-    gst_rtsp_mount_points_add_factory (mounts, "/live", factory);
+    /* attach the factory to mount point */
+    gst_rtsp_mount_points_add_factory (mounts, settings.mount_point, factory);
 
     /* don't need the ref to the mapper anymore */
     g_object_unref (mounts);
