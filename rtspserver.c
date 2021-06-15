@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <glib-object.h>
+#include <json-glib/json-glib.h>
 #include <gst/gst.h>
 #include <gst/rtsp-server/rtsp-server.h>
 
@@ -35,6 +37,38 @@ static void load_settings(struct Settings *settings, const gchar *cfg_file)
 
     if (cfg_file) {
         g_print("Load config from file: %s\n", cfg_file); 
+        JsonParser *parser = json_parser_new();
+        GError *error = NULL;
+        json_parser_load_from_file(parser, cfg_file, &error);
+        if (error) {
+          g_print ("Unable to parse %s: %s\n", cfg_file, error->message);
+          g_error_free (error);
+        }
+        else {
+          JsonNode *root = json_parser_get_root (parser);
+          if (!JSON_NODE_HOLDS_OBJECT (root)) {
+            g_print ("Invalid format in json file %s\n", cfg_file);
+          }
+          else {
+            JsonObject *root_object = json_node_get_object (root);
+            if (!json_object_has_member(root_object, "rtspd")) {
+              g_print ("Unable to get rtspd object in json file %s\n", cfg_file); 
+            }
+            else {
+              JsonObject *object = json_object_get_object_member (root_object, "rtspd");
+              g_assert (object); 
+              if (json_object_has_member(object, "udp_port"))
+                settings->udp_port = json_object_get_int_member (object, "udp_port");
+              if (json_object_has_member(object, "rtsp_port"))
+                settings->rtsp_port = json_object_get_int_member (object, "rtsp_port");
+              if (json_object_has_member(object, "udp_buffer_size"))
+                settings->udp_buffer_size = json_object_get_int_member (object, "udp_buffer_size");
+              if (json_object_has_member(object, "encoder_name"))
+                settings->encoder_name = (char*) json_object_get_string_member (object, "encoder_name");
+            }
+          }
+        }
+        g_object_unref (parser);
     } 
 }
 

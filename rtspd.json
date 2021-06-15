@@ -1,0 +1,8 @@
+{
+    "rtspd": {
+        "udp_port": 5004,
+        "rtsp_port": 8554, 
+        "udp_buffer_size": 0, 
+        "encoder_name": "H264" 
+    }
+}

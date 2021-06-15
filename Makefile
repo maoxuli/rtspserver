@@ -1,16 +1,10 @@
-################################################################################
-#
-# Copyright (c) 2020-2021, Loopinno. All rights reserved.
-#
-################################################################################
-
 APP:=rtspd
 APP_INSTALL_DIR?=/usr/local/bin
 
 SRCS:= $(wildcard *.c)
 INCS:= $(wildcard *.h)
 
-PKGS:= gstreamer-1.0 gstreamer-video-1.0 gstreamer-rtsp-server-1.0
+PKGS:= gstreamer-1.0 gstreamer-video-1.0 gstreamer-rtsp-server-1.0 json-glib-1.0
 
 OBJS:= $(SRCS:.c=.o)
 
