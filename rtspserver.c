@@ -6,7 +6,7 @@
 
 #define DEFAULT_UDP_PORT 5004
 #define DEFAULT_RTSP_PORT 8554
-#define DEFAULT_MOUNT_POINT "live"
+#define DEFAULT_MOUNT_POINT "/live"
 #define DEFAULT_ENCODER "H264"
 
 static guint cintr = FALSE;
@@ -66,12 +66,16 @@ static void load_settings(struct Settings *settings, const gchar *cfg_file)
                 settings->udp_port = json_object_get_int_member (object, "udp_port");
               if (json_object_has_member(object, "rtsp_port"))
                 settings->rtsp_port = json_object_get_int_member (object, "rtsp_port");
-              if (json_object_has_member(object, "mount_point"))
-                settings->mount_point = (char*) json_object_get_string_member (object, "mount_point");
+              if (json_object_has_member(object, "mount_point")) {
+                const gchar *mp = json_object_get_string_member (object, "mount_point");
+                settings->mount_point = g_strdup(mp);
+              }
               if (json_object_has_member(object, "udp_buffer_size"))
                 settings->udp_buffer_size = json_object_get_int_member (object, "udp_buffer_size");
-              if (json_object_has_member(object, "encoder_name"))
-                settings->encoder_name = (char*) json_object_get_string_member (object, "encoder_name");
+              if (json_object_has_member(object, "encoder_name")) {
+                const gchar *enc = json_object_get_string_member (object, "encoder_name");
+                settings->encoder_name = g_strdup(enc);
+              }
             }
           }
         }
@@ -147,10 +151,16 @@ int main (int argc, char *argv[])
 
     struct Settings settings; 
     memset(&settings, sizeof(settings), 0); 
+    settings.udp_port = DEFAULT_UDP_PORT;
+    settings.rtsp_port = DEFAULT_RTSP_PORT;
+    settings.mount_point = DEFAULT_MOUNT_POINT;
+    settings.encoder_name = DEFAULT_ENCODER; 
     load_settings(&settings, cfg_file); 
 
     g_print("udp port: %d\n", settings.udp_port); 
     g_print("rtsp port: %d\n", settings.rtsp_port); 
+    g_print("mount point: '%s'\n", settings.mount_point); 
+    g_print("encoder name: %s\n", settings.encoder_name); 
 
     guint64 udp_buffer_size = settings.udp_buffer_size; 
     if (udp_buffer_size == 0)
@@ -194,7 +204,7 @@ int main (int argc, char *argv[])
     g_timeout_add (400, check_for_interrupt, NULL);
 
     /* start serving */
-    g_print ("stream ready at rtsp://localhost:%d/live\n", settings.rtsp_port);
+    g_print ("stream ready at rtsp://localhost:%d/%s\n", settings.rtsp_port, settings.mount_point);
     g_main_loop_run (main_loop);
 
     return 0;
