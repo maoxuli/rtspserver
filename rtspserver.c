@@ -56,11 +56,11 @@ static void load_settings(struct Settings *settings, const gchar *cfg_file)
           }
           else {
             JsonObject *root_object = json_node_get_object (root);
-            if (!json_object_has_member(root_object, "rtspd")) {
-              g_print ("Unable to get rtspd object in json file %s\n", cfg_file); 
+            if (!json_object_has_member(root_object, "rtspserver")) {
+              g_print ("Unable to get rtspserver object in json file %s\n", cfg_file); 
             }
             else {
-              JsonObject *object = json_object_get_object_member (root_object, "rtspd");
+              JsonObject *object = json_object_get_object_member (root_object, "rtspserver");
               g_assert (object); 
               if (json_object_has_member(object, "udp_port"))
                 settings->udp_port = json_object_get_int_member (object, "udp_port");

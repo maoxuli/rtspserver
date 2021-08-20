@@ -1,4 +1,4 @@
-APP:=rtspd
+APP:=rtspserver
 APP_INSTALL_DIR?=/usr/local/bin
 
 SRCS:= $(wildcard *.c)
@@ -20,7 +20,8 @@ $(APP): $(OBJS) Makefile
 	$(CC) -o $(APP) $(OBJS) $(LIBS)
 
 install: $(APP)
-	cp -rv $(APP) $(APP_INSTALL_DIR)
+	mkdir -p $(APP_INSTALL_DIR)
+	cp -r $(APP) $(APP_INSTALL_DIR)
 
 clean:
 	rm -rf $(OBJS)

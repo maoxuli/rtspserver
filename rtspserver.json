@@ -1,5 +1,5 @@
 {
-    "rtspd": {
+    "rtspserver": {
         "udp_port": 5004,
         "rtsp_port": 8554, 
         "mount_point": "/live",
