@@ -204,7 +204,7 @@ int main (int argc, char *argv[])
     g_timeout_add (400, check_for_interrupt, NULL);
 
     /* start serving */
-    g_print ("stream ready at rtsp://localhost:%d/%s\n", settings.rtsp_port, settings.mount_point);
+    g_print ("stream ready at rtsp://localhost:%d%s\n", settings.rtsp_port, settings.mount_point);
     g_main_loop_run (main_loop);
 
     return 0;
